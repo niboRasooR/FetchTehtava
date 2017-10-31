@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>button excercise</title>
+    <script>
+        var lastId = 0;
+
+        var key = "MYKEY";
+
+
+
+        var myHeaders = new Headers();
+        myHeaders.append('Content-type', 'application/json');
+
+        function responseIsReady(response) {
+            if (response.ok) {
+                //response.text().then((result) => console.log("RESULT:" + result))
+
+                let promise = response.json();
+                //console.log(promise);
+                return promise;
+            } else {
+                throw new Error("could not connect.");
+            }
+        }
+
+
+        function jsonIsParsed(jsonObject) {
+            //console.log("jsonIsparsed():" + jsonObject);
+
+            let p = document.getElementById('sisalto');
+            let i = 0;
+            let data = jsonObject.computer;
+            console.log(data);
+            let roomCode;
+            chosenRoom = document.getElementById("roomcode").value;
+            chosenRoom = chosenRoom.toUpperCase();
+            let roomsArray;
+            let text = "Vapaat koneet luokassa " + chosenRoom + ": ";
+            for (let i = 0; i < data.length; i++) {
+
+                let computerName = data[i].computerName;
+                let status = data[i].status;
+                //console.log(computerName);
+                let roomData = data[i].room;
+                // console.log(roomData);
+                let roomCode = roomData.roomCode;
+                console.log(roomCode);
+
+                // console.log(data[i]);
+                if (roomData.roomCode == chosenRoom && status == "free") {
+                    console.log("Vapaa kone: " + computerName);
+                    text += computerName + ", ";
+                }
+                if (roomData == "undefined") {
+                    console.log(" Roomdata undefined");
+                }
+            }
+
+
+            //rearrange data by campuses
+            //get jsonObjects by Room
+
+            p.innerHTML = text;
+
+        }
+
+        function showByCampus(jsonObject) {
+            //console.log("jsonIsparsed():" + jsonObject);
+
+            let p = document.getElementById('sisalto');
+            let i = 0;
+            let data = jsonObject.computer;
+            console.log(data);
+            let chosenCampus;
+            chosenCampus = document.getElementById("campus").value;
+
+            let roomsArray;
+            let text = "Vapaat koneet kampuksella " + chosenCampus + ": ";
+            for (let i = 0; i < data.length; i++) {
+                let computerName = data[i].computerName;
+                let status = data[i].status;
+                //console.log(computerName);
+                let roomData = data[i].room;
+                // console.log(roomData);
+                let roomCode = roomData.roomCode;
+                console.log(roomCode);
+
+                // console.log(data[i]);
+                if (roomData.campus == chosenCampus && status == "free") {
+                    console.log(": " + computerName);
+                    text += "  " + computerName + " (luokassa " + roomCode + "), ";
+                }
+                if (roomData == "undefined") {
+                    console.log(" Roomdata undefined");
+                } else {
+                    for (let j = 0; j < roomData.length; j++) {
+                        console.log(" ITEM: " + roomData[j].roomCode);
+
+                    }
+                    /* if (roomData.roomCode == roomCode) {
+                         console.log(" roomdata:" + roomData);
+                     }*/
+                    //console.log(roomData.roomCode);
+                }
+            }
+
+
+            //rearrange data by campuses
+            //get jsonObjects by Room
+
+            p.innerHTML = text;
+
+        }
+
+
+
+        function whenPageLoaded() {
+
+            let buttonNext = document.getElementById("next");
+            let buttonPrev = document.getElementById("prev");
+
+            let listUL = document.getElementById("list");
+
+            let buttonFree = document.getElementById("freebutton");
+            buttonFree.onclick = clickFreeRoom;
+
+
+            let buttonCampus = document.getElementById("campusbutton");
+            buttonCampus.onclick = clickFreeCampus;
+
+        }
+
+        function removeItem(id) {
+            let ul = document.querySelector('ul')
+            ul.removeChild(document.getElementById(id))
+                //REMOVE FROM BACKEND  USINING URL
+        }
+
+        function clickFree() {
+            let url = "https://opendata.tamk.fi/r1/reservation/computerstatus/search";
+
+            url = url + "?apiKey=" + key;
+            let campus = document.getElementById("campus").value;
+
+            let startDate = "2017-11-01T08:00";
+            let endDate = "2017-11-05T18:00";
+            let roomnr = document.getElementById("roomcode").value;
+            roomnr = "C4-12";
+
+            let body = '{"roomcode":["' + roomnr + '"], "status":"free"}';
+
+            if (campus == "Kuntokatu" || campus == "Mediapolis") {
+                body = '{"campus":"' + campus + '", "status":"free"}';
+
+            } else {
+                //body = '{"campusArea":["' + campus + '"], "status":"free"}';
+                campus = "Library";
+                url = "https://opendata.tamk.fi/r1/computerstatus/computers/campusareas/" + "?apiKey=" + key + campus + "?status=free";
+                url = "https://opendata.tamk.fi/r1/campusareas/" + "?apiKey=" + key + campus + "?status=free";
+                url = "https://opendata.tamk.fi/r1/campusareas/Library?status=free?apiKey=" + key;
+
+                url = "https://opendata.tamk.fi/r1/computerstatus/computers/?apiKey=" + key;
+                body = null;
+            }
+
+            //  body = '{"startDate": "' + startDate + '", "endDate":"' + endDate + '", "campus":"' + campus + '" }';
+            let task = "showFreeMachines";
+
+            makeFetch(body, url, task);
+
+        }
+
+        function clickFreeRoom() {
+            // fetch('https://opendata.tamk.fi/r1/computerstatus/computers/?apiKey=YOURKEYHERE')
+            let url = "https://opendata.tamk.fi/r1/computerstatus/search";
+            // fetch(url, send).then(responseIsReady).then(jsonIsParsed);
+
+            // let startDate = "2017-11-01T08:00";
+            //let endDate = "2017-11-05T18:00";
+
+            let roomnr = document.getElementById("roomcode").value;
+            roomnr = "C2-11";
+            let object = '{ "room":["' + roomnr + '"],"status":"free" }';
+
+            let myHeaders = new Headers();
+            var init = {
+                method: "post",
+                headers: myHeaders,
+                body: object
+            }
+
+            fetch(url + "?apiKey=" + key, init).then(responseIsReady).then(jsonIsParsed);
+        }
+
+        function clickFreeCampus() {
+            // fetch('https://opendata.tamk.fi/r1/computerstatus/computers/?apiKey=YOURKEYHERE')
+            let url = "https://opendata.tamk.fi/r1/computerstatus/search";
+            // fetch(url, send).then(responseIsReady).then(jsonIsParsed);
+
+
+            let roomnr = document.getElementById("roomcode").value;
+            // roomnr = "C2-11";
+            let object = '{ "room":["' + roomnr + '"],"status":"free" }';
+
+            let myHeaders = new Headers();
+            var init = {
+                method: "post",
+                headers: myHeaders,
+                body: object
+            }
+
+            fetch(url + "?apiKey=" + key, init).then(responseIsReady).then(showByCampus);
+        }
+
+
+        function showFreeMachines(jsonObject) {
+            console.log("ShowFreeMachines()");
+            console.log(jsonObject);
+            let p = document.getElementById('sisalto');
+            let i = 0;
+
+            /* let data = jsonObject.computer[i];
+             let computerName = data.computerName;
+             let roomData = jsonObject.computer[i].room;
+             let roomCode;
+             let text = "Room: ";
+             let roomsArray;
+             if (roomData == "undefined") {
+                 console.log(" Roomdata undefined");
+             } else {
+                 console.log(" roomdata:" + roomData);
+                 console.log(roomData.roomCode);
+             }
+
+             //rearrange data by campuses
+             //get jsonObjects by Room
+             let campusKeys = new Array();*/
+
+        }
+
+        function makeFetch(body, urlWithKey, task) {
+            let myHeaders = new Headers();
+            let init = {
+                method: 'post',
+                headers: myHeaders
+            }
+
+            if (body != null) {
+                init = {
+                    method: "post",
+                    headers: myHeaders,
+                    body: body
+                }
+
+            }
+
+            console.log(" FETCHING: " + urlWithKey + "?apiKey=" + key + " ->" + init);
+            fetch(urlWithKey, init).then(responseIsReady).then(task);
+
+        }
+
+        function clicked() {
+            // fetch('https://opendata.tamk.fi/r1/computerstatus/computers/?apiKey=YOURKEYHERE')
+            let url = "https://opendata.tamk.fi/r1/reservation/building/";
+            // fetch(url, send).then(responseIsReady).then(jsonIsParsed);
+
+            let startDate = "2017-11-01T08:00";
+            let endDate = "2017-11-05T18:00";
+
+            let roomnr = document.getElementById("roomcode").value;
+            roomnr = "C4-12";
+            let object = '{"startDate": "' + startDate + '", "endDate":"' + endDate + '", "room":["' + roomnr + '"] }';
+
+            let myHeaders = new Headers();
+            var init = {
+                method: "post",
+                headers: myHeaders,
+                body: object
+            }
+
+            fetch("https://opendata.tamk.fi/r1/reservation/search/" + "?apiKey=" + key, init).then(responseIsReady).then(jsonIsParsed);
+        }
+        window.onload = whenPageLoaded;
+    </script>
+
+    <body>
+        Huone:
+        <input id="roomcode" type="text" name="roomcode">
+        <button id="freebutton">Etsi vapaita</button>
+
+        <br> Etsi vapaita koneita kampukselta:
+        <form>
+            Toimipaikka:
+            <select id="campus">
+               
+                <option value="Kuntokatu">Kuntokatu</option>
+                <option value="Finlayson">Finlayson</option>
+                <option value="Mediapolis">Mediapolis</option>
+                <!-- lisää arvoja ja arvon mukaan erilainen searchi -->
+               
+              </select>
+        </form>
+        <!--<button id="elementbutton">Fetch</button>-->
+        <button id="campusbutton">Etsi vapaita</button>
+        <!-- <button id="last">last</button>
+        <button id="prev">next</button>-->
+        <ul id="list">
+
+        </ul>
+
+        <ul id="robins">
+
+        </ul>
+        <p id="sisalto"></p>
+
+    </body>
+
+</html>
